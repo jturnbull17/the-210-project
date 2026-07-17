@@ -8,4 +8,4 @@ export const fallbackCountries=[
 {id:'japan',name:'Japan',phase:'phase2',route_order:7,dates:'Feb 2027',summary:'Japan is the detail chapter.',current_location:'Tokyo',tone:'rose',days:21,status:'upcoming'},
 {id:'hong-kong',name:'Hong Kong',phase:'phase2',route_order:8,dates:'Mar 2027',summary:'Hong Kong compresses energy into skyline and movement.',current_location:'Hong Kong Island',tone:'wine',days:7,status:'upcoming'},
 {id:'singapore',name:'Singapore',phase:'phase2',route_order:9,dates:'Mar 2027',summary:'Singapore closes the Asia act.',current_location:'Marina Bay',tone:'teal',days:7,status:'upcoming'}];
-export const fallbackLocations=[];export const fallbackMedia=[];export const fallbackComments=[];export const fallbackSettings={current_country_id:'peru',current_location_slug:'cusco'};
+export const fallbackLocations=[];export const fallbackMedia=[];export const fallbackComments=[];export const fallbackSettings={current_country_id:'peru',current_location_slug:'cusco',default_phase:'phase1'};

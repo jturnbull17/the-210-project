@@ -5,8 +5,11 @@ do $$ begin alter table public.countries add constraint countries_status_check c
 create table if not exists public.locations (id uuid primary key default gen_random_uuid(),country_id text not null references public.countries(id) on delete cascade,slug text not null,name text not null,date_text text,summary text,blog text,highlights text[] default '{}',tags text[] default '{}',hero_image text,sort_order int default 0,is_published boolean default true,created_at timestamptz default now(),updated_at timestamptz default now(),unique(country_id,slug));
 create table if not exists public.media (id uuid primary key default gen_random_uuid(),location_id uuid not null references public.locations(id) on delete cascade,url text not null,file_path text,caption text,media_type text default 'photo',sort_order int default 0,created_at timestamptz default now());
 alter table public.media add column if not exists caption text;
+alter table public.media add column if not exists media_type text default 'photo';
 create table if not exists public.comments (id uuid primary key default gen_random_uuid(),location_id uuid not null references public.locations(id) on delete cascade,parent_id uuid references public.comments(id) on delete cascade,name text not null,comment text not null,created_at timestamptz default now());
-create table if not exists public.site_settings (id text primary key default 'main',current_country_id text references public.countries(id),current_location_slug text,updated_at timestamptz default now());
+create table if not exists public.site_settings (id text primary key default 'main',current_country_id text references public.countries(id),current_location_slug text,default_phase text default 'phase1',updated_at timestamptz default now());
+alter table public.site_settings add column if not exists default_phase text default 'phase1';
+do $$ begin alter table public.site_settings add constraint site_settings_default_phase_check check (default_phase in ('phase1','phase2')); exception when duplicate_object then null; end $$;
 alter table public.countries enable row level security;alter table public.locations enable row level security;alter table public.media enable row level security;alter table public.comments enable row level security;alter table public.site_settings enable row level security;
 drop policy if exists "public read countries" on public.countries;create policy "public read countries" on public.countries for select using (is_published=true);
 drop policy if exists "public read locations" on public.locations;create policy "public read locations" on public.locations for select using (is_published=true);
@@ -29,7 +32,7 @@ insert into public.countries (id,name,phase,code,route_order,dates,summary,curre
 ('japan','Japan','phase2','JP',7,'Feb 2027','Japan is the detail chapter.','Tokyo',array[]::text[],'rose',21,'upcoming'),
 ('hong-kong','Hong Kong','phase2','HK',8,'Mar 2027','Hong Kong compresses energy into skyline and movement.','Hong Kong Island',array[]::text[],'wine',7,'upcoming'),
 ('singapore','Singapore','phase2','SG',9,'Mar 2027','Singapore closes the Asia act.','Marina Bay',array[]::text[],'teal',7,'upcoming') on conflict (id) do nothing;
-insert into public.site_settings (id,current_country_id,current_location_slug) values ('main','peru','cusco') on conflict (id) do update set current_country_id=excluded.current_country_id,current_location_slug=excluded.current_location_slug;
+insert into public.site_settings (id,current_country_id,current_location_slug,default_phase) values ('main','peru','cusco','phase1') on conflict (id) do update set current_country_id=excluded.current_country_id,current_location_slug=excluded.current_location_slug;
 insert into storage.buckets (id,name,public) values ('trip-media','trip-media',true) on conflict (id) do update set public=true;
 drop policy if exists "public read trip media" on storage.objects;create policy "public read trip media" on storage.objects for select using (bucket_id='trip-media');
 drop policy if exists "authenticated upload trip media" on storage.objects;create policy "authenticated upload trip media" on storage.objects for insert to authenticated with check (bucket_id='trip-media');
