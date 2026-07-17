@@ -1,24 +1,25 @@
-# The 210 Project V4.4
+# The 210 Project V4.3
 
-Travel-first rich story editor release.
+Map-led archive and travel CMS upgrade.
 
 ## Included
-- Admin notifications now auto-dismiss.
-- Save country summary/status now uses a direct update instead of upsert.
-- Country status labels are now: COMING SOON, LIVE NOW, COMPLETED.
-- Improved Asia map outline.
-- Removed Curated Top Moments, Highlights and Photo Preview sections from public pages.
-- Added photo captions when uploading photos.
-- Added photo caption editing for existing photos.
-- Added rich blog embedding: use `[[photo:PHOTO_ID]]` inside the blog body to place photos where you want them.
-- Admin photo rows show each photo's embed token.
-- Location pages render text and embedded photos inline.
-- Gallery pages remain available.
+- Removed the large Field Archive country grid from the homepage.
+- Country access now happens directly from the map selection panel.
+- Map selected marker is dark; live marker is yellow; visited/done marker is green with a tick.
+- Countries can be set as `upcoming`, `live`, or `visited` in admin.
+- Admin can delete a location with a browser confirmation prompt.
+- Admin can edit existing locations.
+- Admin can upload multiple images to a location from phone.
+- Admin can set an uploaded image as the hero image.
+- Admin can delete uploaded media.
+- Gallery pages still work at `/archive/<country>/<location>/gallery`.
+- Breadcrumbs and mobile bottom navigation included.
 
-## Deploy
-- Upload source to GitHub.
-- Netlify build command: `npm run build`.
-- Netlify publish directory: `dist`.
+## Deployment
+Use GitHub + Netlify.
+
+- Build command: `npm run build`
+- Publish directory: `dist`
 
 ## Supabase
-Run `supabase/schema.sql` as a new SQL query. This is safe to run over V4.3 and adds/keeps the fields V4.4 uses.
+Run `supabase/schema.sql` in a new Supabase SQL query. This adds country status and delete policies where needed.
