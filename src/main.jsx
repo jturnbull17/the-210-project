@@ -1,12 +1,233 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { createRoot } from 'react-dom/client'
+import { supabase, isSupabaseConfigured } from './supabaseClient'
+import './styles.css'
 
-import React,{useEffect,useRef,useState}from'react';import{createRoot}from'react-dom/client';import{Map,BookOpen}from'lucide-react';import{loadPublicData,updateCountry,addLocation,updateLocation,deleteLocation,updateSettings,addMedia,updateMedia,deleteMedia,addComment}from'./lib/data';import{supabase,hasSupabase}from'./lib/supabase';import'./styles.css';
-const byPhase=(a,p)=>a.filter(c=>c.phase===p),slug=s=>String(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''),country=(a,id)=>a.find(c=>c.id===id)||a[0];
-function useData(){const[d,setD]=useState(null);async function refresh(){const r=await loadPublicData();setD(r);return r}useEffect(()=>{refresh()},[]);return[d,refresh]}
-function BottomNav(){return <nav className="bottom"><a href="/#map"><Map size={16}/>Map</a><a href="/#ai"><BookOpen size={16}/>AI</a></nav>}
-function Home(){const[d]=useData();const[phase,setPhase]=useState('phase1'),[sel,setSel]=useState(null),[q,setQ]=useState('What changed in Peru?');useEffect(()=>{if(d&&!sel){const c=country(d.countries,d.settings.current_country_id);setSel(c);setPhase(c.phase||d.settings.default_phase||'phase1')}},[d,sel]);useEffect(()=>{if(location.hash==='#ai')setTimeout(()=>scrollTo({top:document.body.scrollHeight,behavior:'smooth'}),200)},[d]);if(!d||!sel)return <main className="hero"><h1>Loading...</h1></main>;const shown=byPhase(d.countries,phase),pos=phase==='phase1'?{colombia:['43%','16%'],peru:['34%','39%'],argentina:['48%','76%'],brazil:['70%','40%']}:{vietnam:['31%','66%'],'south-korea':['63%','32%'],japan:['82%','38%'],'hong-kong':['53%','55%'],singapore:['41%','80%']};return <><main className="hero"><section className="layout"><div><p className="kicker">LIVE TRAVEL ARCHIVE</p><h1>The <em>210</em> Project</h1><p className="lead">Jack and Grace's live travel journal around South America and Asia.</p><a className="cta" href="#ai">ASK ABOUT THE JOURNEY</a></div><div className="panel" id="map"><div className="tabs"><button className={phase==='phase1'?'on':''}onClick={()=>{setPhase('phase1');setSel(byPhase(d.countries,'phase1')[0])}}>Phase 1</button><button className={phase==='phase2'?'on':''}onClick={()=>{setPhase('phase2');setSel(byPhase(d.countries,'phase2')[0])}}>Phase 2</button></div><div className="head"><span>INTERACTIVE ROUTE</span><span>{phase==='phase1'?'SEP - DEC 2026':'JAN - MARCH'}</span></div><div className="mapbox"><svg viewBox="0 0 100 100"><path d={phase==='phase1'?"M47 5 C58 7 67 14 70 25 C73 37 66 46 61 55 C57 62 59 68 54 75 C50 83 43 98 37 95 C32 92 35 79 31 69 C27 58 21 47 25 37 C29 28 33 22 34 13 C35 7 40 4 47 5 Z":"M14 35 C22 20 38 14 51 17 C61 9 78 14 86 27 C96 43 86 56 72 57 C65 64 60 70 51 72 C44 82 30 84 20 75 C10 65 7 48 14 35 Z"}/></svg>{shown.map(c=><button className={`mark ${sel.id===c.id?'sel':''} ${c.status}`}style={{left:pos[c.id]?.[0],top:pos[c.id]?.[1]}}onClick={()=>setSel(c)}>{c.status==='visited'?'✓':String(c.route_order).padStart(2,'0')}</button>)}</div><div className="strip">{shown.map(c=><button onClick={()=>setSel(c)}className={sel.id===c.id?'sel':''}><b>{c.name}</b><small>{c.status==='visited'?'COMPLETED':c.status==='live'?'LIVE NOW':'COMING SOON'}</small></button>)}</div><div className="selected"><p>{sel.status==='visited'?'COMPLETED':sel.status==='live'?'LIVE NOW':'COMING SOON'}</p><h2>{sel.name}</h2><a href={`/archive/${sel.id}`}>Open country page</a></div></div></section></main><section className="ai" id="ai"><div><p className="kicker">THE ARCHIVE COMPANION</p><h2>Ask about<br/>the journey.</h2><p>Ask questions about places, stories, lessons and moments from the archive.</p></div><div className="answer"><small>AI COMPANION</small><h3>{q.toLowerCase().includes('peru')?'Peru is currently the endurance chapter.':'The map is now the archive.'}</h3><input value={q}onChange={e=>setQ(e.target.value)}/></div></section><BottomNav/></>}
-function CountryPage({id}){const[d]=useData();if(!d)return <main/>;const c=country(d.countries,id),locs=d.locations.filter(l=>l.country_id===c.id);return <><main className="hero slim"><a href="/">Home</a><h1>{c.name}</h1><p>{c.summary}</p></main><section className="cards">{locs.map(l=><a href={`/archive/${c.id}/${l.slug}`}><img src={l.hero_image}/><h2>{l.name}</h2><p>{l.summary}</p></a>)}</section><BottomNav/></>}
-function Story({media,text}){return <div className="story">{String(text||'').split(/(\[\[media:[a-zA-Z0-9-]+\]\])/g).map((p,i)=>{let m=p.match(/\[\[media:([a-zA-Z0-9-]+)\]\]/);if(m){let item=media.find(x=>x.id===m[1]);return item?<figure><img src={item.url}/><figcaption>{item.caption}</figcaption></figure>:null}return p.split('\n').filter(Boolean).map(x=><p>{x}</p>)})}</div>}
-function LocationPage({countryId,locSlug}){const[d,refresh]=useData();if(!d)return <main/>;const c=country(d.countries,countryId),l=d.locations.find(x=>x.country_id===c.id&&x.slug===locSlug)||{},media=d.media.filter(m=>m.location_id===l.id);return <><main className="hero slim"><a href={`/archive/${c.id}`}>Back to {c.name}</a><h1>{l.name}</h1><p>{l.summary}</p></main><section className="content"><Story text={l.blog} media={media}/><Comments id={l.id} comments={d.comments.filter(x=>x.location_id===l.id)} refresh={refresh}/></section><BottomNav/></>}
-function Comments({id,comments,refresh}){const[n,setN]=useState(''),[t,setT]=useState(''),[msg,setMsg]=useState('');async function post(){if(!n||!t)return setMsg('Add a name and comment.');let r=await addComment({location_id:id,name:n,comment:t});if(r.error)return setMsg(r.error.message);setN('');setT('');setMsg('Comment added.');refresh()}return <div className="comments"><h2>Comments</h2><input placeholder="Name"value={n}onChange={e=>setN(e.target.value)}/><textarea placeholder="Comment"value={t}onChange={e=>setT(e.target.value)}/><button onClick={post}>Post comment</button><small>{msg}</small>{comments.map(c=><article><b>{c.name}</b><p>{c.comment}</p></article>)}</div>}
-function Admin(){const[d,refresh]=useData();const[session,setSession]=useState(null),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[msg,setMsg]=useState(''),[busy,setBusy]=useState(''),[files,setFiles]=useState([]),[loc,setLoc]=useState({country_id:'peru',id:'',name:'',slug:'',summary:'',blog:''}),[c,setC]=useState({id:'peru',current_location:'',status:'live'});const mediaRef=useRef(null);useEffect(()=>{if(supabase){supabase.auth.getSession().then(({data})=>setSession(data.session));supabase.auth.onAuthStateChange((_,s)=>setSession(s))}},[]);if(!d)return <main/>;async function signIn(e){e.preventDefault();if(!hasSupabase){setMsg('Supabase is not configured yet.');return}const {error}=await supabase.auth.signInWithPassword({email,password});setMsg(error?error.message:'Signed in')}async function saveLoc(){try{setBusy('location');let payload={...loc,slug:loc.slug||slug(loc.name),is_published:true,sort_order:99};if(!payload.id)delete payload.id;let r=payload.id?await updateLocation(payload):await addLocation(payload);if(r.error)throw r.error;let newLoc=r.data;setLoc({...loc,...newLoc});let added=[];for(const f of files){const path=`${newLoc.country_id}/${newLoc.slug}/${Date.now()}-${f.name}`;let up=await supabase.storage.from('trip-media').upload(path,f,{upsert:true,contentType:f.type});if(up.error)throw up.error;let url=supabase.storage.from('trip-media').getPublicUrl(path).data.publicUrl;let mr=await addMedia({location_id:newLoc.id,url,file_path:path,caption:f.name,media_type:f.type.startsWith('video/')?'video':'photo'});if(mr.error)throw mr.error;added.push(mr.data)}setFiles([]);setMsg(added.length?`✓ ${added.length} media item${added.length>1?'s':''} uploaded`:'✓ Location saved');setBusy('');await refresh();setTimeout(()=>mediaRef.current?.scrollIntoView({behavior:'smooth'}),150)}catch(e){setMsg(e.message);setBusy('')}}async function saveCountry(){try{setBusy('country');let r=await updateCountry(c);if(r.error)throw r.error;setMsg('✓ Country summary/status saved');await refresh()}catch(e){setMsg(e.message)}finally{setBusy('')}}return <main className="admin"><h1>Manage The 210 Project</h1>{!session?<form className="login" onSubmit={signIn}><h2>Sign in</h2><input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)}/><input placeholder="Password" type="password" value={password} onChange={e=>setPassword(e.target.value)}/><button>Sign in</button></form>:<div className="adminGrid"><section><h2>Country</h2><select value={c.id}onChange={e=>setC({...c,id:e.target.value})}>{d.countries.map(x=><option value={x.id}>{x.name}</option>)}</select><select value={c.status}onChange={e=>setC({...c,status:e.target.value})}><option value="upcoming">Upcoming</option><option value="live">Live</option><option value="visited">Completed</option></select><input placeholder="Current location"value={c.current_location}onChange={e=>setC({...c,current_location:e.target.value})}/><button onClick={saveCountry}>{busy==='country'?'Saving...':'Save country summary/status'}</button></section><section><h2>Location</h2><select value={loc.id||''}onChange={e=>setLoc(d.locations.find(x=>x.id===e.target.value)||{country_id:'peru',id:'',name:'',slug:'',summary:'',blog:''})}><option value="">New location</option>{d.locations.map(x=><option value={x.id}>{x.name}</option>)}</select><select value={loc.country_id}onChange={e=>setLoc({...loc,country_id:e.target.value})}>{d.countries.map(x=><option value={x.id}>{x.name}</option>)}</select><input placeholder="Name"value={loc.name}onChange={e=>setLoc({...loc,name:e.target.value,slug:slug(e.target.value)})}/><input placeholder="Slug"value={loc.slug}onChange={e=>setLoc({...loc,slug:e.target.value})}/><textarea placeholder="Summary"value={loc.summary}onChange={e=>setLoc({...loc,summary:e.target.value})}/><textarea placeholder="Blog"value={loc.blog}onChange={e=>setLoc({...loc,blog:e.target.value})}/><input type="file"multiple accept="image/*,video/*"onChange={e=>setFiles([...e.target.files])}/><button onClick={saveLoc}>{busy==='location'?'Uploading media...':loc.id?'Update location':'Publish location'}</button><div ref={mediaRef}>{d.media.filter(m=>m.location_id===loc.id).map(m=><div className="mediaRow"><small>[[media:{m.id}]]</small><button onClick={()=>navigator.clipboard.writeText(`[[media:${m.id}]]`)}>Copy token</button><button onClick={()=>updateMedia({id:m.id,caption:m.caption})}>Save caption</button><button onClick={()=>setLoc({...loc,hero_image:m.url})}>Set hero</button><button onClick={()=>deleteMedia(m.id).then(refresh)}>Delete</button></div>)}</div></section></div>}<div className={msg?'toast show':'toast'}>{msg}</div></main>}
-function Router(){let p=location.pathname.split('/').filter(Boolean);if(p[0]==='admin')return <Admin/>;if(p[0]==='archive'&&p[1]&&p[2])return <LocationPage countryId={p[1]} locSlug={p[2]}/>;if(p[0]==='archive'&&p[1])return <CountryPage id={p[1]}/>;return <Home/>}createRoot(document.getElementById('root')).render(<Router/>);
+const DEFAULT_COUNTRIES = [
+  { id: 'colombia', name: 'Colombia', code: 'CO', phase: 'phase1', status: 'planned', summary: '' },
+  { id: 'peru', name: 'Peru', code: 'PE', phase: 'phase1', status: 'completed', summary: '' },
+  { id: 'argentina', name: 'Argentina', code: 'AR', phase: 'phase1', status: 'planned', summary: '' },
+  { id: 'brazil', name: 'Brazil', code: 'BR', phase: 'phase1', status: 'completed', summary: '' },
+  { id: 'vietnam', name: 'Vietnam', code: 'VN', phase: 'phase2', status: 'planned', summary: '' },
+  { id: 'south-korea', name: 'South Korea', code: 'KR', phase: 'phase2', status: 'planned', summary: '' },
+  { id: 'japan', name: 'Japan', code: 'JP', phase: 'phase2', status: 'completed', summary: '' },
+  { id: 'hong-kong', name: 'Hong Kong', code: 'HK', phase: 'phase2', status: 'planned', summary: '' },
+  { id: 'singapore', name: 'Singapore', code: 'SG', phase: 'phase2', status: 'planned', summary: '' }
+]
+
+const phaseLabels = { all: 'All', phase1: 'South America', phase2: 'Asia' }
+const statusLabels = { planned: 'Planned', active: 'Live', completed: 'Completed' }
+
+function normaliseCountry(country) {
+  return {
+    ...country,
+    id: country.id || country.slug || country.name?.toLowerCase().replaceAll(' ', '-'),
+    phase: country.phase || 'phase1',
+    status: country.status || (country.is_completed ? 'completed' : 'planned'),
+    summary: country.summary || country.description || ''
+  }
+}
+
+function useHashRoute() {
+  const [hash, setHash] = useState(window.location.hash || '#home')
+  useEffect(() => {
+    const onHash = () => setHash(window.location.hash || '#home')
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+  return [hash.replace('#', ''), next => { window.location.hash = next }]
+}
+
+function App() {
+  const [route, go] = useHashRoute()
+  const [countries, setCountries] = useState(DEFAULT_COUNTRIES)
+  const [locations, setLocations] = useState([])
+  const [phaseFilter, setPhaseFilter] = useState('all')
+  const [notice, setNotice] = useState('')
+  const aiRef = useRef(null)
+  const mapRef = useRef(null)
+
+  useEffect(() => { loadData() }, [])
+
+  useEffect(() => {
+    if (!notice) return
+    const timer = setTimeout(() => setNotice(''), 2800)
+    return () => clearTimeout(timer)
+  }, [notice])
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (route === 'ai' && aiRef.current) aiRef.current.scrollIntoView({ block: 'center' })
+      if (route === 'map' && mapRef.current) mapRef.current.scrollIntoView({ block: 'start' })
+    }, 60)
+  }, [route])
+
+  async function loadData() {
+    if (!isSupabaseConfigured) return
+    const { data: countryData } = await supabase
+      .from('countries')
+      .select('*')
+      .order('name', { ascending: true })
+    if (countryData?.length) setCountries(countryData.map(normaliseCountry))
+
+    const { data: locationData } = await supabase
+      .from('locations')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (locationData) setLocations(locationData)
+  }
+
+  const visibleCountries = useMemo(() => (
+    phaseFilter === 'all' ? countries : countries.filter(c => c.phase === phaseFilter)
+  ), [countries, phaseFilter])
+
+  function Nav() {
+    return <nav className="bottom-nav">
+      <button onClick={() => go('home')}>Home</button>
+      <button onClick={() => go('archive')}>Archive</button>
+      <button onClick={() => go('map')}>Map</button>
+      <button onClick={() => go('ai')}>AI</button>
+      <button onClick={() => go('admin')}>Admin</button>
+    </nav>
+  }
+
+  return <>
+    {notice && <div className="toast">{notice}</div>}
+    <main className="shell">
+      <section className="hero" id="home">
+        <p className="eyebrow">The 210 Project</p>
+        <h1>One journey, properly organised.</h1>
+        <p className="lead">A mobile-friendly travel archive with live status, completed countries, map phases and an AI companion.</p>
+      </section>
+
+      {(route === 'home' || route === 'archive') && <Archive countries={countries} />}
+      {(route === 'home' || route === 'map') && <MapPanel refEl={mapRef} countries={visibleCountries} phaseFilter={phaseFilter} setPhaseFilter={setPhaseFilter} />}
+      {(route === 'home' || route === 'ai') && <AIBox refEl={aiRef} />}
+      {route === 'admin' && <Admin countries={countries} setCountries={setCountries} locations={locations} setLocations={setLocations} setNotice={setNotice} reload={loadData} />}
+    </main>
+    <Nav />
+  </>
+}
+
+function Archive({ countries }) {
+  return <section className="panel" id="archive">
+    <div className="section-heading">
+      <p className="eyebrow">Archive</p>
+      <h2>Countries</h2>
+    </div>
+    <div className="country-grid">
+      {countries.map(country => <article key={country.id} className={`country-card ${country.status === 'completed' ? 'completed' : ''} ${country.status === 'planned' ? 'muted' : ''}`}>
+        <div className="flag-code">{country.code}</div>
+        <h3>{country.name}</h3>
+        <p>{country.summary || 'Coming soon.'}</p>
+        <span className={`pill ${country.status}`}>{statusLabels[country.status] || country.status}</span>
+      </article>)}
+    </div>
+  </section>
+}
+
+function MapPanel({ refEl, countries, phaseFilter, setPhaseFilter }) {
+  return <section className="panel map-panel" id="map" ref={refEl}>
+    <div className="section-heading">
+      <p className="eyebrow">Map</p>
+      <h2>Journey phases</h2>
+    </div>
+    <div className="phase-controls">
+      {['all', 'phase1', 'phase2'].map(phase => <button key={phase} className={phaseFilter === phase ? 'selected' : ''} onClick={() => setPhaseFilter(phase)}>{phaseLabels[phase]}</button>)}
+    </div>
+    <div className="map-shape">
+      {countries.map(country => <div key={country.id} className={`map-pin ${country.phase} ${country.status}`}>
+        <strong>{country.code}</strong><span>{country.name}</span>
+      </div>)}
+    </div>
+  </section>
+}
+
+function AIBox({ refEl }) {
+  return <section className="panel ai-panel" id="ai" ref={refEl}>
+    <p className="eyebrow">Ask about the journey</p>
+    <h2>AI companion</h2>
+    <div className="ai-card">
+      <p>Ask about the journey, route, countries, highlights or blog posts.</p>
+      <input placeholder="Ask about the journey..." />
+    </div>
+  </section>
+}
+
+function Admin({ countries, setCountries, locations, setLocations, setNotice, reload }) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [session, setSession] = useState(null)
+  const [selectedId, setSelectedId] = useState(countries[0]?.id || 'peru')
+  const [saving, setSaving] = useState(false)
+  const selected = countries.find(c => c.id === selectedId) || countries[0]
+  const [draft, setDraft] = useState(selected || {})
+
+  useEffect(() => { setDraft(selected || {}) }, [selectedId, countries.length])
+  useEffect(() => {
+    if (!supabase) return
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s))
+    return () => sub.subscription.unsubscribe()
+  }, [])
+
+  async function signIn() {
+    if (!supabase) return setNotice('Supabase is not configured yet.')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) setNotice(error.message)
+    else setNotice('Signed in.')
+  }
+
+  async function saveCountry() {
+    setSaving(true)
+    const payload = { id: draft.id, name: draft.name, code: draft.code, phase: draft.phase, status: draft.status, summary: draft.summary }
+    if (supabase) {
+      const { error } = await supabase.from('countries').upsert(payload, { onConflict: 'id' })
+      if (error) { setNotice(error.message); setSaving(false); return }
+    }
+    setCountries(prev => prev.map(c => c.id === payload.id ? { ...c, ...payload } : c))
+    setNotice('Country summary/status saved')
+    setSaving(false)
+    reload?.()
+  }
+
+  async function setLiveLocation(location) {
+    setSaving(true)
+    if (supabase) {
+      await supabase.from('locations').update({ is_live: false })
+      const { error } = await supabase.from('locations').update({ is_live: true, status: 'active' }).eq('id', location.id)
+      if (error) { setNotice(error.message); setSaving(false); return }
+    }
+    setLocations(prev => prev.map(l => ({ ...l, is_live: l.id === location.id })))
+    setNotice(`Live location updated: ${location.title || location.name || location.id}`)
+    setSaving(false)
+  }
+
+  if (!session) return <section className="panel admin-panel">
+    <p className="eyebrow">Admin</p>
+    <h2>Sign in</h2>
+    <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
+    <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Password" />
+    <button onClick={signIn}>Log in</button>
+  </section>
+
+  return <section className="panel admin-panel">
+    <p className="eyebrow">Admin</p>
+    <h2>Country status and map phases</h2>
+    <label>Country<select value={selectedId} onChange={e => setSelectedId(e.target.value)}>{countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+    <label>Name<input value={draft.name || ''} onChange={e => setDraft({ ...draft, name: e.target.value })} /></label>
+    <label>Code<input value={draft.code || ''} onChange={e => setDraft({ ...draft, code: e.target.value })} /></label>
+    <label>Map phase<select value={draft.phase || 'phase1'} onChange={e => setDraft({ ...draft, phase: e.target.value })}><option value="phase1">South America</option><option value="phase2">Asia</option></select></label>
+    <label>Status<select value={draft.status || 'planned'} onChange={e => setDraft({ ...draft, status: e.target.value })}><option value="planned">Planned</option><option value="active">Live</option><option value="completed">Completed</option></select></label>
+    <label>Summary<textarea value={draft.summary || ''} onChange={e => setDraft({ ...draft, summary: e.target.value })} /></label>
+    <button disabled={saving} onClick={saveCountry}>{saving ? 'Saving...' : 'Save country summary/status'}</button>
+
+    <h3>Set live location</h3>
+    <div className="live-list">
+      {locations.length === 0 && <p>No locations found yet.</p>}
+      {locations.map(l => <button key={l.id} disabled={saving} className={l.is_live ? 'selected' : ''} onClick={() => setLiveLocation(l)}>{l.title || l.name || l.id}</button>)}
+    </div>
+  </section>
+}
+
+createRoot(document.getElementById('root')).render(<App />)
