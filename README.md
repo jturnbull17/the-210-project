@@ -1,25 +1,24 @@
-# The 210 Project V4.3
+# The 210 Project V4.5
 
-Map-led archive and travel CMS upgrade.
+Mobile-first travel release.
 
 ## Included
-- Removed the large Field Archive country grid from the homepage.
-- Country access now happens directly from the map selection panel.
-- Map selected marker is dark; live marker is yellow; visited/done marker is green with a tick.
-- Countries can be set as `upcoming`, `live`, or `visited` in admin.
-- Admin can delete a location with a browser confirmation prompt.
-- Admin can edit existing locations.
-- Admin can upload multiple images to a location from phone.
-- Admin can set an uploaded image as the hero image.
-- Admin can delete uploaded media.
-- Gallery pages still work at `/archive/<country>/<location>/gallery`.
-- Breadcrumbs and mobile bottom navigation included.
+- More mobile padding and smaller mobile type.
+- Hero CTA changed to `ASK ABOUT THE JOURNEY` and links to the AI companion.
+- Private Admin link moved to the footer only.
+- Bottom mobile nav reduced to `Map` and `AI`, with correct anchors.
+- Country map panel simplified to status, country and blog/location links only.
+- Admin country summary field removed.
+- Hero image URL field removed from location form.
+- Per-photo captions when selecting multiple photos.
+- Copy token button for uploaded photos.
+- Blog comments with name/comment fields, threaded replies, and reply forms.
+- Comments are stored in Supabase.
 
-## Deployment
-Use GitHub + Netlify.
-
-- Build command: `npm run build`
-- Publish directory: `dist`
+## Deploy
+- Upload source to GitHub.
+- Netlify build command: `npm run build`.
+- Netlify publish directory: `dist`.
 
 ## Supabase
-Run `supabase/schema.sql` in a new Supabase SQL query. This adds country status and delete policies where needed.
+Run `supabase/schema.sql` in a new SQL query. This adds the comments table and policies.
