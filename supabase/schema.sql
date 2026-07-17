@@ -22,17 +22,6 @@ drop policy if exists "authenticated manage locations" on public.locations;creat
 drop policy if exists "authenticated manage media" on public.media;create policy "authenticated manage media" on public.media for all to authenticated using (true) with check (true);
 drop policy if exists "authenticated manage comments" on public.comments;create policy "authenticated manage comments" on public.comments for all to authenticated using (true) with check (true);
 drop policy if exists "authenticated manage settings" on public.site_settings;create policy "authenticated manage settings" on public.site_settings for all to authenticated using (true) with check (true);
-insert into public.countries (id,name,phase,code,route_order,dates,summary,current_location,highlights,tone,days,status) values
-('colombia','Colombia','phase1','CO',1,'Sep 2026','Colombia begins The 210 Project with colour, movement and arrival.','Medellin',array[]::text[],'sage',21,'upcoming'),
-('peru','Peru','phase1','PE',2,'Sep / Oct 2026','Peru is the endurance chapter.','Cusco',array[]::text[],'copper',24,'live'),
-('argentina','Argentina','phase1','AR',3,'Oct / Nov 2026','Argentina blends city energy with wilderness.','Buenos Aires',array[]::text[],'terracotta',24,'upcoming'),
-('brazil','Brazil','phase1','BR',4,'Nov / Dec 2026','Brazil closes the South America act.','Rio',array[]::text[],'ochre',24,'upcoming'),
-('vietnam','Vietnam','phase2','VN',5,'Jan 2027','Vietnam opens the Asia act.','Hanoi',array[]::text[],'brick',18,'upcoming'),
-('south-korea','South Korea','phase2','KR',6,'Jan / Feb 2027','South Korea becomes a study in pace and structure.','Seoul',array[]::text[],'plum',14,'upcoming'),
-('japan','Japan','phase2','JP',7,'Feb 2027','Japan is the detail chapter.','Tokyo',array[]::text[],'rose',21,'upcoming'),
-('hong-kong','Hong Kong','phase2','HK',8,'Mar 2027','Hong Kong compresses energy into skyline and movement.','Hong Kong Island',array[]::text[],'wine',7,'upcoming'),
-('singapore','Singapore','phase2','SG',9,'Mar 2027','Singapore closes the Asia act.','Marina Bay',array[]::text[],'teal',7,'upcoming') on conflict (id) do nothing;
-insert into public.site_settings (id,current_country_id,current_location_slug,default_phase) values ('main','peru','cusco','phase1') on conflict (id) do update set current_country_id=excluded.current_country_id,current_location_slug=excluded.current_location_slug;
 insert into storage.buckets (id,name,public) values ('trip-media','trip-media',true) on conflict (id) do update set public=true;
 drop policy if exists "public read trip media" on storage.objects;create policy "public read trip media" on storage.objects for select using (bucket_id='trip-media');
 drop policy if exists "authenticated upload trip media" on storage.objects;create policy "authenticated upload trip media" on storage.objects for insert to authenticated with check (bucket_id='trip-media');
