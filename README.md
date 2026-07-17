@@ -1,34 +1,21 @@
-## The 210 Project V4.8 Recovery Hotfix
+## The 210 Project V4.8.1 Recovery Hotfix
 
-This recovery build restores the parts that regressed:
+This version matches the existing Supabase status values: `upcoming`, `live`, and `visited`.
 
-- Completed countries show a green bordered card again.
-- Countries can be switched between Planned, Live and Completed.
-- Map phase controls are back: All, South America and Asia.
-- Admin has simple country phase/status/summary controls.
-- Admin can set a live location.
-- Notifications auto-dismiss after a short period.
-- Publishing/save buttons leave their loading state after save completes.
+### Restored
+- Visited countries show the green bordered card again.
+- Live country shows a blue highlighted card.
+- Upcoming countries are greyed out.
+- Map phase controls are back: All, South America, Asia.
+- Admin can change country phase/status/summary.
+- Admin can set live location without touching the location status constraint.
+- Notifications auto-dismiss.
+- Save buttons should not get stuck on Saving/Publishing.
 - Bottom nav Map and AI work from any route.
-- AI section scrolls into the centre of the screen.
-- Insert token button is not included.
 
 ### Deploy
-
 1. Upload the contents of this folder to GitHub.
-2. In Supabase SQL Editor, run `supabase-v4-8-recovery.sql`.
-3. In Netlify, keep:
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-4. Make sure Netlify environment variables are set:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-
-### Testing checklist
-
-- Completed countries have a green border.
-- Planned countries are greyed out.
-- Map phase buttons filter countries correctly.
-- Admin login works.
-- Save country summary/status changes the archive card.
-- Set live location changes the selected live location without getting stuck on Publishing/Saving.
+2. Run `supabase-v4-8-1-recovery.sql` in Supabase SQL Editor.
+3. Netlify build command: `npm run build`.
+4. Netlify publish directory: `dist`.
+5. Keep environment variables: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
